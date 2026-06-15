@@ -1,36 +1,50 @@
 import { ProjectInterestWidget } from "./components/ProjectInterestWidget";
-import { useSapOpportunity } from "./hooks/useSapOpportunity";
+import { ProjectHistoryPage }   from "./components/ProjectHistoryPage";
+import { useSapOpportunity }    from "./hooks/useSapOpportunity";
 
 /**
- * Reads the Opportunity ID from the URL parameter "id".
- * Example URL: ?id=03801796-6239-11f1-90bc-05cafee74142
+ * Reads a named URL parameter from the current page URL.
  */
-function getOpportunityIdFromUrl(): string | null {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("id");
+function getParam(name: string): string | null {
+  return new URLSearchParams(window.location.search).get(name);
 }
 
+/**
+ * Top-level router — no library needed.
+ *
+ * ?page=history  →  ProjectHistoryPage  (opened in a new tab by the widget)
+ * (anything else) →  ProjectInterestWidget  (the compact Mashup card)
+ */
 export default function App() {
-  const opportunityId = getOpportunityIdFromUrl();
-  const { projects, projectCount, isLoading, error, noPhone } = useSapOpportunity(opportunityId);
+  const page = getParam("page");
 
-  // Loading state — render widget in neutral 0-state, no layout jump
-  if (isLoading) {
-    return <ProjectInterestWidget projectCount={0} projects={[]} />;
+  // ── Full-page history view (new tab) ─────────────────────────────────────
+  if (page === "history") {
+    return <ProjectHistoryPage />;
   }
 
-  // No phone number on the opportunity — show inline message inside the card
+  // ── Compact Mashup card ───────────────────────────────────────────────────
+  return <MashupCard />;
+}
+
+function MashupCard() {
+  const opportunityId = getParam("id");
+  const { projectCount, isLoading, error, noPhone } = useSapOpportunity(opportunityId);
+
+  if (isLoading) {
+    return <ProjectInterestWidget projectCount={0} opportunityId={null} />;
+  }
+
   if (noPhone) {
     return (
       <ProjectInterestWidget
         projectCount={0}
-        projects={[]}
+        opportunityId={null}
         noPhoneMessage="לא קיים מספר טלפון על ההזדמנות הנוכחית"
       />
     );
   }
 
-  // API error — show Hebrew error banner above the widget, widget stays intact
   if (error) {
     return (
       <>
@@ -40,11 +54,15 @@ export default function App() {
         >
           {error}
         </div>
-        <ProjectInterestWidget projectCount={0} projects={[]} />
+        <ProjectInterestWidget projectCount={0} opportunityId={null} />
       </>
     );
   }
 
-  // Normal render — widget driven by live SAP data
-  return <ProjectInterestWidget projectCount={projectCount} projects={projects} />;
+  return (
+    <ProjectInterestWidget
+      projectCount={projectCount}
+      opportunityId={opportunityId}
+    />
+  );
 }
