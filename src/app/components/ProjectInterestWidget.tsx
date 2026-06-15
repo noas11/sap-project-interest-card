@@ -50,7 +50,18 @@ export function ProjectInterestWidget({
 
   function handleClick() {
     if (isZero || !opportunityId) return;
-    window.open(`/?page=history&id=${encodeURIComponent(opportunityId)}`, "_blank");
+
+    const width  = 1100;
+    const height = 700;
+    const left   = Math.round(window.screenX + (window.outerWidth  - width)  / 2);
+    const top    = Math.round(window.screenY + (window.outerHeight - height) / 2);
+
+    const historyUrl = `/?page=history&id=${encodeURIComponent(opportunityId)}`;
+    window.open(
+      historyUrl,
+      "ProjectHistory",
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+    );
   }
 
   return (
