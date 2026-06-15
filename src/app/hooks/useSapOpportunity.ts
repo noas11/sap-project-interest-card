@@ -60,6 +60,7 @@ export function useSapOpportunity(opportunityId: string | null): UseSapOpportuni
     let cancelled = false;
 
     async function fetchData() {
+      const SAP_BASE = import.meta.env.VITE_SAP_BASE_URL ?? "";
       setIsLoading(true);
       setError(null);
       setNoPhone(false);
@@ -67,7 +68,7 @@ export function useSapOpportunity(opportunityId: string | null): UseSapOpportuni
       try {
         // ── Step 1: Load current opportunity ─────────────────────────────────
         const currentRes = await fetch(
-          `/sap/c4c/api/v1/opportunity-service/opportunities/${encodeURIComponent(opportunityId)}`
+          `${SAP_BASE}/sap/c4c/api/v1/opportunity-service/opportunities/${encodeURIComponent(opportunityId)}`
         );
 
         if (!currentRes.ok) {
@@ -93,7 +94,7 @@ export function useSapOpportunity(opportunityId: string | null): UseSapOpportuni
         // ── Step 3: Search related opportunities ──────────────────────────────
         // Fix 3: use the phone number value directly — no encodeURIComponent
         const searchRes = await fetch(
-          `/sap/c4c/api/v1/opportunity-service/opportunities?$filter=extensions/z_phone eq "${phoneNumber}"`
+          `${SAP_BASE}/sap/c4c/api/v1/opportunity-service/opportunities?$filter=extensions/z_phone eq "${phoneNumber}"`
         );
 
         if (!searchRes.ok) {
