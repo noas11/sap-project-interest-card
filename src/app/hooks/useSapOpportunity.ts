@@ -31,6 +31,26 @@ function formatDate(raw: string | null | undefined): string {
 }
 
 /**
+ * Builds the shared fetch options for every SAP API request:
+ *   - Basic Authentication header from VITE_SAP_USERNAME / VITE_SAP_PASSWORD
+ *   - Accept: application/json
+ *
+ * Credentials are read from Vite env vars, which are replaced at build time.
+ * Set them as Environment Variables in Render — never commit real values to .env.
+ */
+function sapFetchOptions(): RequestInit {
+  const credentials = btoa(
+    `${import.meta.env.VITE_SAP_USERNAME}:${import.meta.env.VITE_SAP_PASSWORD}`
+  );
+  return {
+    headers: {
+      Authorization: `Basic ${credentials}`,
+      Accept: "application/json",
+    },
+  };
+}
+
+/**
  * Fetches opportunities from SAP Sales Cloud V2 and returns a sorted,
  * filtered list of related projects for the given opportunity ID.
  *
@@ -61,6 +81,8 @@ export function useSapOpportunity(opportunityId: string | null): UseSapOpportuni
 
     async function fetchData() {
       const SAP_BASE = import.meta.env.VITE_SAP_BASE_URL ?? "";
+      const fetchOptions = sapFetchOptions();
+
       setIsLoading(true);
       setError(null);
       setNoPhone(false);
@@ -68,7 +90,8 @@ export function useSapOpportunity(opportunityId: string | null): UseSapOpportuni
       try {
         // ── Step 1: Load current opportunity ─────────────────────────────────
         const currentRes = await fetch(
-          `${SAP_BASE}/sap/c4c/api/v1/opportunity-service/opportunities/${encodeURIComponent(opportunityId)}`
+          `${SAP_BASE}/sap/c4c/api/v1/opportunity-service/opportunities/${encodeURIComponent(opportunityId)}`,
+          fetchOptions
         );
 
         if (!currentRes.ok) {
@@ -81,7 +104,6 @@ export function useSapOpportunity(opportunityId: string | null): UseSapOpportuni
           currentData?.value?.extensions?.z_phone;
 
         // ── Step 2: Validate phone number ─────────────────────────────────────
-        // Fix 5: distinguish "no phone" from other empty results
         if (!phoneNumber || phoneNumber.trim() === "") {
           if (!cancelled) {
             setNoPhone(true);
@@ -92,9 +114,9 @@ export function useSapOpportunity(opportunityId: string | null): UseSapOpportuni
         }
 
         // ── Step 3: Search related opportunities ──────────────────────────────
-        // Fix 3: use the phone number value directly — no encodeURIComponent
         const searchRes = await fetch(
-          `${SAP_BASE}/sap/c4c/api/v1/opportunity-service/opportunities?$filter=extensions/z_phone eq "${phoneNumber}"`
+          `${SAP_BASE}/sap/c4c/api/v1/opportunity-service/opportunities?$filter=extensions/z_phone eq "${phoneNumber}"`,
+          fetchOptions
         );
 
         if (!searchRes.ok) {
