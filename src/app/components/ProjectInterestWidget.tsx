@@ -1,7 +1,12 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import MuiDialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import IconButton from "@mui/material/IconButton";
+import CloseIcon from "@mui/icons-material/Close";
+import Button from "@mui/material/Button";
 import { Badge } from "./ui/badge";
-import { ScrollArea } from "./ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -10,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
+import { ScrollArea } from "./ui/scroll-area";
 
 export interface Project {
   id: string;
@@ -46,12 +52,12 @@ export function ProjectInterestWidget({
   const isOne = projectCount === 1;
   const isMany = projectCount > 1;
 
-  // Card background
+  // Card background — unchanged
   const cardBg = isMany
     ? "bg-green-50 border border-green-200 shadow-sm shadow-green-100"
     : "bg-white border border-gray-200 shadow-sm";
 
-  // Row left-side indicator strip
+  // Left colour strip — unchanged
   const stripColor = isMany
     ? "bg-green-400"
     : isOne
@@ -60,9 +66,8 @@ export function ProjectInterestWidget({
 
   return (
     <>
-      {/* Widget card */}
+      {/* ── Summary card — unchanged ── */}
       <div className={`relative flex overflow-hidden rounded-lg ${cardBg} transition-all`} dir="rtl">
-        {/* Left color strip (visual indicator) */}
         <div className={`w-1 flex-shrink-0 self-stretch ${stripColor} rounded-r-none rounded-l-lg`} />
 
         <button
@@ -94,16 +99,41 @@ export function ProjectInterestWidget({
         </button>
       </div>
 
-      {/* Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl" dir="rtl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-gray-900 text-right">
-              רשימת פרויקטים קודמים
-            </DialogTitle>
-          </DialogHeader>
+      {/* ── Material UI Dialog ── */}
+      <MuiDialog
+        open={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        fullWidth
+        maxWidth="md"
+        dir="rtl"
+      >
+        {/* Title row with close button */}
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            fontFamily: "inherit",
+            fontWeight: 600,
+            fontSize: "1.1rem",
+            color: "#111827",
+            pb: 1,
+          }}
+        >
+          פרויקטים קודמים
+          <IconButton
+            aria-label="סגור"
+            onClick={() => setIsDialogOpen(false)}
+            size="small"
+            sx={{ color: "#6b7280" }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
 
-          <ScrollArea className="h-[380px] w-full rounded-md border border-gray-200">
+        {/* Table — same columns, same data, same styling */}
+        <DialogContent dividers sx={{ p: 0 }}>
+          <ScrollArea className="h-[380px] w-full">
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
@@ -145,12 +175,37 @@ export function ProjectInterestWidget({
               </TableBody>
             </Table>
           </ScrollArea>
-
-          <p className="text-xs text-gray-400 text-right mt-1">
-            סה"כ {projects.length} פרויקטים
-          </p>
         </DialogContent>
-      </Dialog>
+
+        {/* Footer: row count + close button */}
+        <DialogActions
+          sx={{
+            justifyContent: "space-between",
+            px: 3,
+            py: 1.5,
+            direction: "rtl",
+          }}
+        >
+          <span className="text-xs text-gray-400">
+            סה"כ {projects.length} פרויקטים
+          </span>
+          <Button
+            onClick={() => setIsDialogOpen(false)}
+            size="small"
+            variant="outlined"
+            sx={{
+              fontFamily: "inherit",
+              fontSize: "0.8rem",
+              textTransform: "none",
+              borderColor: "#d1d5db",
+              color: "#374151",
+              "&:hover": { borderColor: "#9ca3af", background: "#f9fafb" },
+            }}
+          >
+            סגור
+          </Button>
+        </DialogActions>
+      </MuiDialog>
     </>
   );
 }
